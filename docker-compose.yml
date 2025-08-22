@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: codepedia_postgres
+    environment:
+      POSTGRES_DB: codepedia
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - codepedia_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: codepedia_backend
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/codepedia
+      JWT_SECRET: your-jwt-secret-key
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    networks:
+      - codepedia_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: codepedia_frontend
+    environment:
+      VITE_API_URL: http://backend:3001/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - codepedia_network
+
+volumes:
+  postgres_data:
+
+networks:
+  codepedia_network:
+    driver: bridge

@@ -1,0 +1,330 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles for Phase 3 components */
+
+/* Markdown Editor Styles */
+.markdown-editor .prose h1,
+.markdown-editor .prose h2,
+.markdown-editor .prose h3,
+.markdown-editor .prose h4,
+.markdown-editor .prose h5,
+.markdown-editor .prose h6 {
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-editor .prose p {
+  margin-bottom: 1em;
+}
+
+.markdown-editor .prose pre {
+  margin: 1em 0;
+  background: #1e1e1e;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.markdown-editor .prose code {
+  background: #f5f5f5;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.markdown-editor .prose blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #6b7280;
+}
+
+.markdown-editor .prose table {
+  width: 100%;
+  margin: 1em 0;
+  border-collapse: collapse;
+}
+
+.markdown-editor .prose th,
+.markdown-editor .prose td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.markdown-editor .prose th {
+  background: #f9fafb;
+  font-weight: 600;
+}
+
+/* Code Block Wrapper Styles */
+.code-block-wrapper {
+  margin: 1em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+}
+
+.code-block-header {
+  background: #f9fafb;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.code-block-header .language-label {
+  text-transform: uppercase;
+}
+
+.code-block-header .copy-button {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.code-block-header .copy-button:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.code-block-content {
+  background: #1e1e1e;
+  color: #f8f8f2;
+  padding: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* Quality Check Styles */
+.quality-checker .prose {
+  font-size: 14px;
+}
+
+/* API Config Manager Styles */
+.api-config-manager pre {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+/* Notebook Manager Styles */
+.notebook-manager .code-block-wrapper {
+  background: white;
+}
+
+/* Scrollbar Styling */
+.markdown-editor textarea::-webkit-scrollbar,
+.quality-checker div::-webkit-scrollbar {
+  width: 8px;
+}
+
+.markdown-editor textarea::-webkit-scrollbar-track,
+.quality-checker div::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.markdown-editor textarea::-webkit-scrollbar-thumb,
+.quality-checker div::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.markdown-editor textarea::-webkit-scrollbar-thumb:hover,
+.quality-checker div::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Loading Animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Syntax Highlighter Customizations */
+.markdown-editor .prose pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* Phase 4: Voting System Styles */
+
+/* Voting Interface Styles */
+.voting-interface .candidate-panel {
+  transition: all 0.2s ease;
+}
+
+.voting-interface .candidate-panel:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.voting-interface .vote-option {
+  transition: all 0.2s ease;
+}
+
+.voting-interface .vote-option:hover {
+  background-color: #f9fafb;
+  border-color: #3b82f6;
+}
+
+.voting-interface .vote-option.selected {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+/* Voting Results Progress Bars */
+.vote-progress-bar {
+  transition: width 0.5s ease;
+}
+
+/* Task Reassignment Styles */
+.reassignment-history-item {
+  transition: all 0.2s ease;
+}
+
+.reassignment-history-item:hover {
+  background-color: #f8fafc;
+}
+
+/* Voting Manager Tabs */
+.voting-tabs {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.voting-tab {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.voting-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #3b82f6;
+}
+
+/* Status Badges */
+.status-badge {
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  text-align: center;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.active {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.status-badge.completed {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.reassigned {
+  background-color: #fed7aa;
+  color: #ea580c;
+}
+
+/* Winner Announcement Animation */
+@keyframes winner-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.winner-announcement {
+  animation: winner-bounce 2s ease-in-out;
+}
+
+/* Vote Count Animation */
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.vote-count {
+  animation: count-up 0.5s ease-out;
+}
+
+/* Responsive Design for Voting Interface */
+@media (max-width: 1024px) {
+  .voting-interface .candidate-comparison {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  backdrop-filter: blur(4px);
+  transition: all 0.2s ease;
+}
+
+/* Task Card Hover Effects */
+.task-card {
+  transition: all 0.2s ease;
+}
+
+.task-card:hover {
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Loading States */
+.loading-spinner {
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
