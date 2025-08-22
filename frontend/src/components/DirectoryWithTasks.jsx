@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import axios from 'axios'
+import { marked } from 'marked'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 function DirectoryWithTasks({ user }) {
   const [categories, setCategories] = useState([])
@@ -10,6 +13,8 @@ function DirectoryWithTasks({ user }) {
   const [expandedCategories, setExpandedCategories] = useState(new Set())
   const [selectedFunction, setSelectedFunction] = useState(null)
   const [tasksLoading, setTasksLoading] = useState(false)
+  const [finalDocument, setFinalDocument] = useState(null)
+  const [finalDocumentLoading, setFinalDocumentLoading] = useState(false)
   const [showCreateTask, setShowCreateTask] = useState(false)
   const [showCreateCategory, setShowCreateCategory] = useState(false)
   const [showCreateFunction, setShowCreateFunction] = useState(false)
@@ -69,10 +74,34 @@ function DirectoryWithTasks({ user }) {
       const response = await axios.get('/wiki-tasks')
       const functionTasks = response.data.filter(task => task.function_id === functionId)
       setTasks(functionTasks)
+      
+      // 检查是否有已完成的任务，如果有则获取最终文档
+      const completedTasks = functionTasks.filter(task => task.status === 'completed')
+      if (completedTasks.length > 0) {
+        fetchFinalDocument(functionId)
+      } else {
+        setFinalDocument(null)
+      }
     } catch (error) {
       console.error('Error fetching tasks:', error)
     } finally {
       setTasksLoading(false)
+    }
+  }
+
+  const fetchFinalDocument = async (functionId) => {
+    setFinalDocumentLoading(true)
+    try {
+      const response = await axios.get(`/voting-sessions/function/${functionId}/final-document`)
+      setFinalDocument(response.data)
+    } catch (error) {
+      console.error('Error fetching final document:', error)
+      if (error.response?.status !== 404) {
+        console.error('Unexpected error:', error)
+      }
+      setFinalDocument(null)
+    } finally {
+      setFinalDocumentLoading(false)
     }
   }
 
@@ -197,6 +226,15 @@ function DirectoryWithTasks({ user }) {
       overtime: 'bg-red-100 text-red-800'
     }
     return badges[status] || 'bg-gray-100 text-gray-800'
+  }
+
+  const renderMarkdown = (content) => {
+    try {
+      const html = marked(content || '')
+      return { __html: html }
+    } catch (error) {
+      return { __html: '<p>内容渲染失败</p>' }
+    }
   }
 
   const CategoryNode = ({ category, level = 0 }) => {
@@ -382,9 +420,54 @@ function DirectoryWithTasks({ user }) {
                 </div>
               </div>
 
+              {/* Final Document Section - Show first if available */}
+              {finalDocument && (
+                <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-semibold text-green-800 mb-2">
+                      📚 已完成文档
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm text-green-700">
+                      <div>
+                        <span className="font-medium">文档作者: </span>
+                        <span>{finalDocument.final_document.author_name}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">代码标注者: </span>
+                        <span>{finalDocument.task.code_annotator_name}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">协作撰写者: </span>
+                        <span>
+                          {[finalDocument.task.writer1_name, finalDocument.task.writer2_name]
+                            .filter(Boolean).join(', ')}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium">完成时间: </span>
+                        <span>{new Date(finalDocument.task.completed_at).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tab Navigation */}
+                  <FinalDocumentTabs 
+                    document={finalDocument} 
+                    renderMarkdown={renderMarkdown}
+                  />
+                </div>
+              )}
+
               {/* Tasks List */}
               <div className="space-y-4">
-                <h3 className="font-medium text-gray-900">Wiki Tasks ({tasks.length})</h3>
+                <h3 className="font-medium text-gray-900">
+                  Wiki Tasks ({tasks.length})
+                  {finalDocument && (
+                    <span className="ml-2 text-sm text-green-600">
+                      ✅ 有已完成版本
+                    </span>
+                  )}
+                </h3>
                 
                 {tasksLoading ? (
                   <div className="text-center py-8 text-gray-500">Loading tasks...</div>
@@ -728,6 +811,126 @@ function DirectoryWithTasks({ user }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// 最终文档标签页组件
+function FinalDocumentTabs({ document, renderMarkdown }) {
+  const [activeTab, setActiveTab] = useState('document')
+
+  const tabs = [
+    { id: 'document', label: '📄 文档内容', icon: '📄' },
+    { id: 'api', label: '🔗 API 配置', icon: '🔗' },
+    { id: 'notebooks', label: '📓 用例脚本', icon: '📓' }
+  ]
+
+  return (
+    <div>
+      {/* Tab Navigation */}
+      <div className="border-b border-green-300 mb-4">
+        <nav className="-mb-px flex space-x-8">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab.id
+                  ? 'border-green-500 text-green-700'
+                  : 'border-transparent text-green-600 hover:text-green-800 hover:border-green-400'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      <div className="bg-white rounded border border-green-200 p-4 max-h-96 overflow-y-auto">
+        {activeTab === 'document' && (
+          <div>
+            <h4 className="text-lg font-semibold mb-3 text-gray-900">
+              {document.final_document.title}
+            </h4>
+            <div 
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={renderMarkdown(document.final_document.content)} 
+            />
+          </div>
+        )}
+
+        {activeTab === 'api' && (
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-900">API 测试配置</h4>
+            {document.api_configs.length === 0 ? (
+              <p className="text-gray-500 text-sm">暂无 API 配置</p>
+            ) : (
+              document.api_configs.map(config => (
+                <div key={config.id} className="border border-gray-200 rounded p-3">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className={`px-2 py-1 text-xs rounded font-medium ${
+                      config.method === 'GET' ? 'bg-green-100 text-green-800' :
+                      config.method === 'POST' ? 'bg-blue-100 text-blue-800' :
+                      config.method === 'PUT' ? 'bg-yellow-100 text-yellow-800' :
+                      config.method === 'DELETE' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {config.method}
+                    </span>
+                    <span className="font-medium">{config.name}</span>
+                  </div>
+                  <code className="text-sm bg-gray-100 px-2 py-1 rounded block">
+                    {config.endpoint}
+                  </code>
+                  {config.description && (
+                    <p className="text-sm text-gray-600 mt-1">{config.description}</p>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'notebooks' && (
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-900">用例脚本</h4>
+            {document.notebooks.length === 0 ? (
+              <p className="text-gray-500 text-sm">暂无用例脚本</p>
+            ) : (
+              document.notebooks.map(notebook => (
+                <div key={notebook.id} className="border border-gray-200 rounded">
+                  <div className="bg-gray-50 px-3 py-2 border-b flex items-center justify-between">
+                    <span className="font-medium">{notebook.title}</span>
+                    <span className="text-xs text-gray-500 uppercase">
+                      {notebook.language}
+                    </span>
+                  </div>
+                  <div className="p-0">
+                    <SyntaxHighlighter
+                      language={notebook.language === 'shell' ? 'bash' : notebook.language}
+                      style={tomorrow}
+                      customStyle={{ 
+                        margin: 0, 
+                        borderRadius: '0 0 6px 6px',
+                        fontSize: '13px',
+                        maxHeight: '200px'
+                      }}
+                    >
+                      {notebook.content || '// 暂无内容'}
+                    </SyntaxHighlighter>
+                  </div>
+                  {notebook.description && (
+                    <div className="px-3 py-2 border-t bg-gray-50">
+                      <p className="text-sm text-gray-600">{notebook.description}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

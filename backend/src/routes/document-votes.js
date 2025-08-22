@@ -229,8 +229,8 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
       SELECT 
         vs.*,
         wt.title as task_title,
-        wt.function_name,
-        wt.category_name,
+        f.name as function_name,
+        c.name as category_name,
         CASE 
           WHEN dv.id IS NOT NULL THEN true 
           ELSE false 
@@ -239,6 +239,8 @@ router.get('/active-sessions', authenticateToken, async (req, res) => {
         dv.voted_at as my_vote_time
       FROM voting_sessions vs
       JOIN wiki_tasks wt ON vs.task_id = wt.id
+      JOIN functions f ON wt.function_id = f.id
+      JOIN categories c ON f.category_id = c.id
       LEFT JOIN votes dv ON vs.id = dv.voting_session_id AND dv.voter_id = $1
       WHERE vs.status = 'active'
       ORDER BY vs.created_at DESC

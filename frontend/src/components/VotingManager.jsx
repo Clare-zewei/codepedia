@@ -109,6 +109,7 @@ function VotingManager({ user }) {
     return badges[status] || 'bg-gray-100 text-gray-800'
   }
 
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -148,13 +149,13 @@ function VotingManager({ user }) {
           {/* Tabs */}
           <div className="border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
-              {user.role === 'admin' ? [
+              {(user.role === 'admin' ? [
                 { id: 'pending', label: '待投票任务', icon: '📋', count: pendingTasks.length },
                 { id: 'active', label: '进行中投票', icon: '🗳️', count: activeSessions.length },
                 { id: 'completed', label: '已完成投票', icon: '✅', count: completedSessions.length }
               ] : [
                 { id: 'active', label: '参与投票', icon: '🗳️', count: activeSessions.length }
-              ]}.map(tab => (
+              ]).map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
@@ -180,6 +181,7 @@ function VotingManager({ user }) {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
         {activeTab === 'pending' && (
           <PendingTasksTab
             tasks={pendingTasks}

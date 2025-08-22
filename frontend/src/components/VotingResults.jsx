@@ -20,7 +20,7 @@ function VotingResults({ user }) {
       setLoading(true)
       const [sessionRes, statsRes] = await Promise.all([
         axios.get(`/voting-sessions/${sessionId}`),
-        axios.get(`/votes/session/${sessionId}/statistics`)
+        axios.get(`/document-votes/session/${sessionId}/statistics`)
       ])
 
       setVotingSession(sessionRes.data)

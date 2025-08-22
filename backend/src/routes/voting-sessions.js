@@ -418,4 +418,106 @@ router.post('/:sessionId/cancel', [authenticateToken, requireRole('admin')], asy
   }
 });
 
+// 获取功能的最终文档内容（已完成投票）
+router.get('/function/:functionId/final-document', authenticateToken, async (req, res) => {
+  try {
+    const { functionId } = req.params;
+
+    // 获取该功能的已完成任务
+    const taskResult = await db.query(`
+      SELECT wt.*, vs.id as voting_session_id
+      FROM wiki_tasks wt
+      LEFT JOIN voting_sessions vs ON wt.voting_session_id = vs.id
+      WHERE wt.function_id = $1 AND wt.status = 'completed'
+      ORDER BY wt.created_at DESC
+      LIMIT 1
+    `, [functionId]);
+
+    if (taskResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No completed task found for this function' });
+    }
+
+    const task = taskResult.rows[0];
+
+    // 获取获胜的文档内容
+    const winnerResult = await db.query(`
+      SELECT 
+        vc.author_name,
+        vc.author_id,
+        ed.title as document_title,
+        ed.content as document_content,
+        ed.updated_at as document_updated_at
+      FROM voting_candidates vc
+      JOIN entry_submissions es ON vc.submission_id = es.id
+      JOIN entry_documents ed ON es.document_id = ed.id
+      WHERE vc.voting_session_id = $1 AND vc.is_winner = true
+      LIMIT 1
+    `, [task.voting_session_id]);
+
+    if (winnerResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No winning document found' });
+    }
+
+    const winner = winnerResult.rows[0];
+
+    // 获取获胜文档的API配置
+    const apiConfigsResult = await db.query(`
+      SELECT eac.* 
+      FROM entry_api_configs eac
+      JOIN entry_submissions es ON eac.document_id = es.document_id
+      JOIN voting_candidates vc ON es.id = vc.submission_id
+      WHERE vc.voting_session_id = $1 AND vc.is_winner = true
+      ORDER BY eac.order_index, eac.created_at
+    `, [task.voting_session_id]);
+
+    // 获取获胜文档的笔记本
+    const notebooksResult = await db.query(`
+      SELECT en.* 
+      FROM entry_notebooks en
+      JOIN entry_submissions es ON en.document_id = es.document_id
+      JOIN voting_candidates vc ON es.id = vc.submission_id
+      WHERE vc.voting_session_id = $1 AND vc.is_winner = true
+      ORDER BY en.order_index, en.created_at
+    `, [task.voting_session_id]);
+
+    // 获取任务分配信息
+    const taskInfoResult = await db.query(`
+      SELECT 
+        u1.username as writer1_name,
+        u2.username as writer2_name,
+        u3.username as code_annotator_name
+      FROM wiki_tasks wt
+      LEFT JOIN users u1 ON wt.writer1_id = u1.id
+      LEFT JOIN users u2 ON wt.writer2_id = u2.id
+      LEFT JOIN users u3 ON wt.code_annotator_id = u3.id
+      WHERE wt.id = $1
+    `, [task.id]);
+
+    const taskInfo = taskInfoResult.rows[0];
+
+    res.json({
+      task: {
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        completed_at: task.updated_at,
+        ...taskInfo
+      },
+      final_document: {
+        title: winner.document_title,
+        content: winner.document_content,
+        author_name: winner.author_name,
+        author_id: winner.author_id,
+        updated_at: winner.document_updated_at
+      },
+      api_configs: apiConfigsResult.rows,
+      notebooks: notebooksResult.rows
+    });
+
+  } catch (error) {
+    console.error('Error fetching final document:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
